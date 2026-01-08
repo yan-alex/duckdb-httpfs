@@ -1,0 +1,8 @@
+require httpfs
+
+statement ok
+PRAGMA enable_verification;
+
+statement error
+from read_csv_auto('https://github.com/duckdb/duckdb/raw/main/data/csv/customer.csv');
+----

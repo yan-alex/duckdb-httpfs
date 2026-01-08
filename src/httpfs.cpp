@@ -507,6 +507,24 @@ bool HTTPFileSystem::ReadInternal(FileHandle &handle, void *buffer, int64_t nr_b
 		if (!hfh.cached_file_handle->Initialized()) {
 			throw InternalException("Cached file not initialized properly");
 		}
+		/* TODO: On failure, nr_bytes = 32000000, while hfh.cached_file_handle->GetSize() = 1276.
+		 *		Q: Why is it not 1241231241243123 ? I should investigate where nr_bytes comes from.
+		 *		A: The value 32000000 is a default, set at csv_reader_options.hpp. 2000000*16 = 32000000.
+		 *		Q: What are the values on success?
+		 *		A: On the happy flow, we don't even enter this if statement, as `if (hfh.cached_file_handle) {` evaluates to false every time.
+		 *			Also, the control flow is different:
+		 *			Length too big flow:
+		 *				first hfh.cached_file_handle = false
+		 *				then hfh.cached_file_handle = true
+		 *			Successful flow:
+		 *				hfh.cached_file_handle = false , always
+		 *				repeats multiple times
+		 *
+		 *
+		 *
+		 *
+		 *
+		 */
 		if (hfh.cached_file_handle->GetSize() < location + nr_bytes) {
 			throw InternalException("Cached file length can't satisfy the requested Read");
 		}
@@ -827,6 +845,7 @@ void HTTPFileHandle::LoadFileInfo() {
 	if (content_size.IsValid()) {
 		length = content_size.GetIndex();
 	}
+	length = 1241231241243123;
 	if (res->headers.HasHeader("Last-Modified")) {
 		HTTPFileSystem::TryParseLastModifiedTime(res->headers.GetHeaderValue("Last-Modified"), last_modified);
 	}
